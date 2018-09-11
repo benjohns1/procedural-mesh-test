@@ -10,4 +10,19 @@ public class ProcGrid : MonoBehaviour
     {
         gridOptions = _gridOptions;
     }
+
+    private void OnValidate()
+    {
+        UpdateMesh();
+    }
+
+    private void UpdateMesh()
+    {
+        Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
+        if (mesh == null)
+        {
+            return;
+        }
+        mesh = GridGenerator.GenerateMesh(gridOptions, mesh);
+    }
 }

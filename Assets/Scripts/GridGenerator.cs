@@ -10,15 +10,60 @@ public class GridGenerator : MonoBehaviour
 
     public Material initialMaterial;
 
-    public TransformDisplay initialTransform;
+    public Vector3 initialOffset = new Vector3(-640, -100, -640);
 
-    public GridOptions gridOptions = new GridOptions();
+    public IntVector2 worldSize = new IntVector2(20, 20);
+
+    public GridOptions gridOptions = new GridOptions(64, 64);
 
     [System.Serializable]
-    public class GridOptions
+    public struct GridOptions
     {
-        public IntVector2 gridSize = new IntVector2(10, 10);
-        public Vector2 gridUnitSize = Vector2.one;
+        public IntVector2 gridSize;
+        public Vector2 gridUnitSize;
+        public Vector2 procOffset;
+        public ProcLevel[] procLevels;
+        public GridOptions(int xSize, int ySize)
+        {
+            gridSize = new IntVector2(xSize, ySize);
+            gridUnitSize = Vector2.one;
+            procOffset = Vector2.zero;
+            procLevels = new ProcLevel[]
+            {
+                new ProcLevel
+                {
+                    perlinHeight = 2f,
+                    perlinScale = new Vector2(0.25f, 0.25f)
+                },
+                new ProcLevel
+                {
+                    perlinHeight = 10f,
+                    perlinScale = new Vector2(0.05f, 0.05f)
+                },
+                new ProcLevel
+                {
+                    perlinHeight = 50f,
+                    perlinScale = new Vector2(0.01f, 0.01f)
+                },
+                new ProcLevel
+                {
+                    perlinHeight = 100f,
+                    perlinScale = new Vector2(0.005f, 0.005f)
+                },
+                new ProcLevel
+                {
+                    perlinHeight = 500f,
+                    perlinScale = new Vector2(0.001f, 0.001f)
+                }
+            };
+        }
+
+        [System.Serializable]
+        public struct ProcLevel
+        {
+            public float perlinHeight;
+            public Vector2 perlinScale;
+        }
     }
 
     [System.Serializable]
@@ -35,28 +80,43 @@ public class GridGenerator : MonoBehaviour
         public static IntVector2 one = new IntVector2(1, 1);
     }
 
-    [System.Serializable]
-    public class TransformDisplay
+    public void GenerateWorld()
     {
-        public Vector3 position = Vector3.zero;
-        public Vector3 rotation = Vector3.zero;
-        public Vector3 scale = Vector3.one;
+        for (int x = 0; x < worldSize.x; x++)
+        {
+            for (int y = 0; y < worldSize.y; y++)
+            {
+                string gridName = initialName + "(" + x + "," + y + ")";
+                GridOptions opts = gridOptions;
+                float offsetX = x * opts.gridUnitSize.x * opts.gridSize.x;
+                float offsetY = y * opts.gridUnitSize.y * opts.gridSize.y;
+                opts.procOffset.x += offsetX;
+                opts.procOffset.y += offsetY;
+                Vector3 offset = initialOffset;
+                offset.x += offsetX;
+                offset.z += offsetY;
+                GenerateSingleGrid(gridName, opts, offset);
+            }
+        }
     }
 
-    public void GenerateGrid()
+    public void GenerateSingleGrid()
     {
-        GameObject go = new GameObject(initialName, typeof(MeshFilter), typeof(MeshRenderer), typeof(ProcGrid));
-        go.GetComponent<ProcGrid>().Init(gridOptions);
-        go.transform.position = initialTransform.position;
-        go.transform.rotation = Quaternion.Euler(initialTransform.rotation);
-        go.transform.localScale = initialTransform.scale;
+        GenerateSingleGrid(initialName, gridOptions, initialOffset);
+    }
+
+    private void GenerateSingleGrid(string gridName, GridOptions opts, Vector3 offset)
+    {
+        GameObject go = new GameObject(gridName, typeof(MeshFilter), typeof(MeshRenderer), typeof(ProcGrid));
+        go.GetComponent<ProcGrid>().Init(opts);
+        go.transform.position = offset;
         if (parent != null)
         {
             go.transform.SetParent(parent);
         }
         go.GetComponent<MeshRenderer>().material = initialMaterial;
 
-        go.GetComponent<MeshFilter>().sharedMesh = GenerateMesh(gridOptions);
+        go.GetComponent<MeshFilter>().sharedMesh = GenerateMesh(opts);
     }
 
     public void DestroyAll()
@@ -98,19 +158,40 @@ public class GridGenerator : MonoBehaviour
         Vector2[] uvs = new Vector2[vertices.Length];
         Vector4[] tangents = new Vector4[vertices.Length];
         Vector4 staticTangent = new Vector4(1f, 0f, 0f, -1f);
+
         for (int i = 0, index = 0; i <= cols; i++)
         {
             for (int j = 0; j <= rows; j++, index++)
             {
-                vertices[index] = new Vector3(j * gridSizeX, 0, i * gridSizeY);
+                float x = j * gridSizeX;
+                float y = i * gridSizeY;
+                vertices[index] = new Vector3(x, 0, y);
                 uvs[index] = new Vector2((float)j / rows, (float)i / cols);
                 tangents[index] = staticTangent;
             }
         }
-        mesh.vertices = vertices;
+        mesh.vertices = opts.procLevels.Length > 0 ? ApplyPerlinHeights(opts, vertices) : vertices;
         mesh.uv = uvs;
         mesh.tangents = tangents;
-        return mesh; ;
+        return mesh;
+    }
+
+    private static Vector3[] ApplyPerlinHeights(GridOptions opts, Vector3[] vertices)
+    {
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            float x = vertices[i].x + opts.procOffset.x;
+            float y = vertices[i].z + opts.procOffset.y;
+            float height = vertices[i].y;
+
+            foreach (GridOptions.ProcLevel level in opts.procLevels)
+            {
+                height += level.perlinHeight * Mathf.PerlinNoise(x * level.perlinScale.x, y * level.perlinScale.y);
+            }
+
+            vertices[i].y = height;
+        }
+        return vertices;
     }
 
     private static int[] GenerateTriangles(GridOptions opts)

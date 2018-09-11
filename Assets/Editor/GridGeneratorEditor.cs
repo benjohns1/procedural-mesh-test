@@ -10,9 +10,13 @@ public class GridGeneratorEditor : Editor
     {
         GridGenerator gridGenerator = target as GridGenerator;
         DrawDefaultInspector();
-        if (GUILayout.Button("Generate Grid"))
+        if (GUILayout.Button("Generate Single Grid"))
         {
-            gridGenerator.GenerateGrid();
+            gridGenerator.GenerateSingleGrid();
+        }
+        if (GUILayout.Button("Generate World Grid"))
+        {
+            gridGenerator.GenerateWorld();
         }
         ShowAdvanced = EditorGUILayout.Foldout(ShowAdvanced, "Advanced");
         if (ShowAdvanced)

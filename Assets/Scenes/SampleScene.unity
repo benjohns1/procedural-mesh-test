@@ -249,8 +249,8 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_LocalRotation: {x: 0.17364816, y: 0, z: 0, w: 0.9848078}
-  m_LocalPosition: {x: 2.5, y: 3, z: -3}
+  m_LocalRotation: {x: -0.1397564, y: -0.050475065, z: 0.007133535, w: -0.9888729}
+  m_LocalPosition: {x: 44.96449, y: 64.205185, z: -46.034637}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -299,7 +299,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 934857391}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.403, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -317,14 +317,54 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   initialName: ProcGrid
-  parent: {fileID: 0}
+  parent: {fileID: 1557436740}
   initialMaterial: {fileID: 2100000, guid: 26c0e8af56fe3d844a8208afbdb42a93, type: 2}
-  initialTransform:
-    position: {x: 0, y: 0, z: 0}
-    rotation: {x: 0, y: 0, z: 0}
-    scale: {x: 1, y: 1, z: 1}
+  initialOffset: {x: -640, y: -100, z: -640}
+  worldSize:
+    x: 20
+    y: 20
   gridOptions:
     gridSize:
-      x: 5
-      y: 5
+      x: 64
+      y: 64
     gridUnitSize: {x: 1, y: 1}
+    procOffset: {x: 0, y: 0}
+    procLevels:
+    - perlinHeight: 2
+      perlinScale: {x: 0.25, y: 0.25}
+    - perlinHeight: 10
+      perlinScale: {x: 0.05, y: 0.05}
+    - perlinHeight: 50
+      perlinScale: {x: 0.01, y: 0.01}
+    - perlinHeight: 100
+      perlinScale: {x: 0.005, y: 0.005}
+    - perlinHeight: 500
+      perlinScale: {x: 0.001, y: 0.001}
+--- !u!1 &1557436739
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1557436740}
+  m_Layer: 0
+  m_Name: World
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1557436740
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1557436739}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
