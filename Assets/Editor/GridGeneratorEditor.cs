@@ -4,7 +4,6 @@ using UnityEditor;
 [CustomEditor(typeof(GridGenerator))]
 public class GridGeneratorEditor : Editor
 {
-    private bool ShowAdvanced = false;
 
     public override void OnInspectorGUI()
     {
@@ -18,13 +17,9 @@ public class GridGeneratorEditor : Editor
         {
             gridGenerator.GenerateWorld();
         }
-        ShowAdvanced = EditorGUILayout.Foldout(ShowAdvanced, "Advanced");
-        if (ShowAdvanced)
+        if (GUILayout.Button("Destroy All"))
         {
-            if (GUILayout.Button("Destroy All"))
-            {
-                DestroyConfirm(gridGenerator);
-            }
+            DestroyConfirm(gridGenerator);
         }
     }
 

@@ -10,30 +10,32 @@ public class GridGenerator : MonoBehaviour
 
     public Material initialMaterial;
 
-    public Vector3 initialOffset = new Vector3(-640, -100, -640);
+    public Vector3 initialOffset = new Vector3(-1000, -250, -1000);
 
     public IntVector2 worldSize = new IntVector2(20, 20);
 
-    public GridOptions gridOptions = new GridOptions(64, 64);
+    public GridOptions gridOptions = new GridOptions(100, 100);
 
     [System.Serializable]
     public struct GridOptions
     {
         public IntVector2 gridSize;
         public Vector2 gridUnitSize;
+        public Vector2 materialScale;
         public Vector2 procOffset;
         public ProcLevel[] procLevels;
         public GridOptions(int xSize, int ySize)
         {
             gridSize = new IntVector2(xSize, ySize);
             gridUnitSize = Vector2.one;
+            materialScale = new Vector2(10000f, 10000f);
             procOffset = Vector2.zero;
             procLevels = new ProcLevel[]
             {
                 new ProcLevel
                 {
-                    perlinHeight = 2f,
-                    perlinScale = new Vector2(0.25f, 0.25f)
+                    perlinHeight = 1f,
+                    perlinScale = new Vector2(0.1f, 0.1f)
                 },
                 new ProcLevel
                 {
@@ -107,7 +109,7 @@ public class GridGenerator : MonoBehaviour
 
     private void GenerateSingleGrid(string gridName, GridOptions opts, Vector3 offset)
     {
-        GameObject go = new GameObject(gridName, typeof(MeshFilter), typeof(MeshRenderer), typeof(ProcGrid));
+        GameObject go = new GameObject(gridName, typeof(MeshFilter), typeof(MeshRenderer), typeof(ProcGrid), typeof(MeshCollider));
         go.GetComponent<ProcGrid>().Init(opts);
         go.transform.position = offset;
         if (parent != null)
@@ -115,8 +117,16 @@ public class GridGenerator : MonoBehaviour
             go.transform.SetParent(parent);
         }
         go.GetComponent<MeshRenderer>().material = initialMaterial;
+        if (initialMaterial.mainTexture.wrapMode == TextureWrapMode.Repeat)
+        {
+            float uScale = Mathf.Ceil(opts.materialScale.x * opts.gridUnitSize.x / initialMaterial.mainTexture.width);
+            float vScale = Mathf.Ceil(opts.materialScale.y * opts.gridUnitSize.y / initialMaterial.mainTexture.height);
+            initialMaterial.mainTextureScale = new Vector2(uScale, vScale);
+        }
 
-        go.GetComponent<MeshFilter>().sharedMesh = GenerateMesh(opts);
+        Mesh mesh = GenerateMesh(opts);
+        go.GetComponent<MeshFilter>().sharedMesh = mesh;
+        go.GetComponent<MeshCollider>().sharedMesh = mesh;
     }
 
     public void DestroyAll()
