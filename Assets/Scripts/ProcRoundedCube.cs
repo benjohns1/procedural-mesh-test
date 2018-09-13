@@ -3,15 +3,17 @@ using System.Collections;
 using System;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-public class ProcCube : MonoBehaviour
+public class ProcRoundedCube : MonoBehaviour
 {
     public Options options;
 
     [Serializable]
     public class Options
     {
-        public string name = "ProcCube";
+        public string name = "ProcRoundedCube";
+        public float unitSize = 1f;
         public IntVector3 size = new IntVector3(8, 8, 8);
+        public float roundness = 1f;
     }
 
     [Serializable]
@@ -42,12 +44,12 @@ public class ProcCube : MonoBehaviour
     {
         Mesh mesh = GetComponent<MeshFilter>().mesh = new Mesh();
         mesh.name = opts.name;
-        mesh.vertices = CreateVertices(opts);
+        CreateVertices(ref mesh, opts);
         int vCount = mesh.vertices.Length;
-        mesh.triangles = CreateTriangles(opts, vCount);
+        CreateTriangles(ref mesh, opts, vCount);
     }
 
-    private static int[] CreateTriangles(Options opts, int vCount)
+    private static void CreateTriangles(ref Mesh mesh, Options opts, int vCount)
     {
         int xSize = opts.size.x;
         int ySize = opts.size.y;
@@ -70,7 +72,7 @@ public class ProcCube : MonoBehaviour
         t = CreateBottomFace(ref triangles, t, ring, xSize, ySize, zSize, vCount);
         
 
-        return triangles;
+        mesh.triangles = triangles;
     }
 
     private static int CreateTopFace(ref int[] triangles, int t, int ring, int xSize, int ySize, int zSize)
@@ -157,11 +159,13 @@ public class ProcCube : MonoBehaviour
     }
 
 
-    private static Vector3[] CreateVertices(Options opts)
+    private static void CreateVertices(ref Mesh mesh, Options opts)
     {
         int xSize = opts.size.x;
         int ySize = opts.size.y;
         int zSize = opts.size.z;
+        float roundness = opts.roundness;
+        float unitSize = opts.unitSize;
 
         int cornerVertices = 8;
         int edgeVertices = (xSize + ySize + zSize - 3) * 4;
@@ -170,42 +174,77 @@ public class ProcCube : MonoBehaviour
             (xSize - 1) * (zSize - 1) +
             (ySize - 1) * (zSize - 1)) * 2;
         Vector3[] vertices = new Vector3[cornerVertices + edgeVertices + faceVertices];
+        Vector3[] normals = new Vector3[vertices.Length];
 
         int v = 0;
         for (int y = 0; y <= ySize; y++)
         {
             for (int x = 0; x <= xSize; x++)
             {
-                vertices[v++] = new Vector3(x, y, 0);
+                SetVertex(ref vertices, ref normals, v++, x, y, 0, xSize, ySize, zSize, roundness, unitSize);
             }
             for (int z = 1; z <= zSize; z++)
             {
-                vertices[v++] = new Vector3(xSize, y, z);
+                SetVertex(ref vertices, ref normals, v++, xSize, y, z, xSize, ySize, zSize, roundness, unitSize);
             }
             for (int x = xSize - 1; x >= 0; x--)
             {
-                vertices[v++] = new Vector3(x, y, zSize);
+                SetVertex(ref vertices, ref normals, v++, x, y, zSize, xSize, ySize, zSize, roundness, unitSize);
             }
             for (int z = zSize - 1; z > 0; z--)
             {
-                vertices[v++] = new Vector3(0, y, z);
+                SetVertex(ref vertices, ref normals, v++, 0, y, z, xSize, ySize, zSize, roundness, unitSize);
             }
         }
         for (int z = 1; z < zSize; z++)
         {
             for (int x = 1; x < xSize; x++)
             {
-                vertices[v++] = new Vector3(x, ySize, z);
+                SetVertex(ref vertices, ref normals, v++, x, ySize, z, xSize, ySize, zSize, roundness, unitSize);
             }
         }
         for (int z = 1; z < zSize; z++)
         {
             for (int x = 1; x < xSize; x++)
             {
-                vertices[v++] = new Vector3(x, 0, z);
+                SetVertex(ref vertices, ref normals, v++, x, 0, z, xSize, ySize, zSize, roundness, unitSize);
             }
         }
 
-        return vertices;
+        mesh.vertices = vertices;
+        mesh.normals = normals;
+    }
+
+    private static void SetVertex(ref Vector3[] vertices, ref Vector3[] normals, int i, int x, int y, int z, int xSize, int ySize, int zSize, float roundness, float unitSize)
+    {
+        Vector3 inner = vertices[i] = new Vector3(x, y, z) * unitSize;
+
+        if (x < roundness)
+        {
+            inner.x = roundness;
+        }
+        else if (x > xSize - roundness)
+        {
+            inner.x = (xSize * unitSize) - roundness;
+        }
+        if (y < roundness)
+        {
+            inner.y = roundness;
+        }
+        else if (y > ySize - roundness)
+        {
+            inner.y = (ySize * unitSize) - roundness;
+        }
+        if (z < roundness)
+        {
+            inner.z = roundness;
+        }
+        else if (z > zSize - roundness)
+        {
+            inner.z = (zSize * unitSize) - roundness;
+        }
+
+        normals[i] = (vertices[i] - inner).normalized;
+        vertices[i] = inner + normals[i] * roundness;
     }
 }
